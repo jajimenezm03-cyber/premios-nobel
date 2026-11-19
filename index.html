@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consulta los Premios Nobel</title>
+</head>
+<body>
+<div id="nobel-widget">
+  <style>
+    #nobel-widget {
+      --n-bg: #fff;
+      --n-ink: #193640;
+      --n-muted: #718087;
+      --n-line: #e1e7e9;
+      --n-gold: #a47a25;
+      --n-gold-bg: #f8f3e7;
+      --n-blue: #193640;
+      width: 100%;
+      max-width: 760px;
+      margin: 24px auto;
+      padding: 24px;
+      background: var(--n-bg);
+      color: var(--n-ink);
+      border: 1px solid var(--n-line);
+      border-radius: 12px;
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.55;
+      box-sizing: border-box;
+    }
+
+    #nobel-widget *,
+    #nobel-widget *::before,
+    #nobel-widget *::after {
+      box-sizing: border-box;
+    }
+
+    #nobel-widget .n-top {
+      border-bottom: 1px solid var(--n-line);
+      padding-bottom: 18px;
+      margin-bottom: 20px;
+    }
+
+    #nobel-widget .n-kicker {
+      color: var(--n-gold);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    #nobel-widget h2 {
+      font-size: clamp(25px, 4vw, 34px);
+      line-height: 1.15;
+      margin: 0;
+      font-weight: 700;
+      color: var(--n-ink);
+    }
+
+    #nobel-widget .n-subtitle {
+      color: var(--n-muted);
+      font-size: 14px;
+      margin: 9px 0 0;
+    }
+
+    #nobel-widget .n-controls {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 14px;
+      align-items: end;
+    }
+
+    #nobel-widget .n-field label {
+      display: block;
+      color: var(--n-muted);
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    #nobel-widget select {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1px solid var(--n-line);
+      border-radius: 6px;
+      background: var(--n-bg);
+      color: var(--n-ink);
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+    }
+
+    #nobel-widget button {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 14px;
+      padding: 11px 18px;
+      border: 1px solid var(--n-blue);
+      border-radius: 6px;
+      background: var(--n-blue);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, opacity .2s;
+    }
+
+    #nobel-widget button:hover:not(:disabled) {
+      background: #28515e;
+    }
+
+    #nobel-widget button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    #nobel-widget select:focus-visible,
+    #nobel-widget button:focus-visible {
+      outline: 3px solid var(--n-gold);
+      outline-offset: 3px;
+    }
+
+    #nobel-widget .n-result {
+      margin-top: 26px;
+      min-height: 65px;
+    }
+
+    #nobel-widget .n-result-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 2px solid var(--n-gold);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    #nobel-widget .n-result-title strong {
+      font-size: 19px;
+    }
+
+    #nobel-widget .n-result-title span {
+      color: var(--n-muted);
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+    }
+
+    #nobel-widget .n-laureate {
+      position: relative;
+      padding: 15px 17px;
+      margin-bottom: 12px;
+      border-left: 3px solid var(--n-gold);
+      background: var(--n-gold-bg);
+      border-radius: 0 7px 7px 0;
+    }
+
+    #nobel-widget .n-name {
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    #nobel-widget .n-type {
+      display: inline-block;
+      margin-top: 6px;
+      color: var(--n-gold);
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    #nobel-widget .n-portion {
+      color: var(--n-muted);
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    #nobel-widget .n-why {
+      margin: 9px 0 0;
+      color: #455b62;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    #nobel-widget .n-message {
+      padding: 16px;
+      border-radius: 7px;
+      background: #f1f5f6;
+      color: var(--n-ink);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    #nobel-widget .n-error {
+      background: #fbefed;
+      color: #a3261e;
+    }
+
+    #nobel-widget .n-loading {
+      text-align: center;
+      padding: 24px 10px;
+      color: var(--n-muted);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    #nobel-widget .n-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-bottom: 8px;
+      border: 2px solid var(--n-line);
+      border-top-color: var(--n-gold);
+      border-radius: 50%;
+      animation: n-spin .8s linear infinite;
+    }
+
+    @keyframes n-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #nobel-widget .n-foot {
+      border-top: 1px solid var(--n-line);
+      margin-top: 22px;
+      padding-top: 13px;
+      color: var(--n-muted);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+    }
+
+    @media (max-width: 480px) {
+      #nobel-widget {
+        padding: 18px 14px;
+        margin: 12px auto;
+      }
+
+      #nobel-widget .n-controls {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      #nobel-widget button {
+        margin-top: 2px;
+      }
+
+      #nobel-widget .n-name {
+        font-size: 17px;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #nobel-widget {
+        --n-bg: #172a32;
+        --n-ink: #edf3f4;
+        --n-muted: #a5b5ba;
+        --n-line: #344951;
+        --n-gold: #e0b653;
+        --n-gold-bg: #303027;
+        --n-blue: #d9ad49;
+      }
+
+      #nobel-widget button {
+        color: #172a32;
+      }
+
+      #nobel-widget .n-why {
+        color: #c2d0d3;
+      }
+
+      #nobel-widget .n-message {
+        background: #253b44;
+        color: var(--n-ink);
+      }
+
+      #nobel-widget .n-error {
+        background: #492c2b;
+        color: #ffc7c0;
+      }
+    }
+  </style>
+
+  <div class="n-top">
+    <div class="n-kicker">Ciencia · Cultura · Humanidad</div>
+    <h2>Premios Nobel</h2>
+    <p class="n-subtitle">
+      Un recorrido por los galardonados más importantes de la historia.
+    </p>
+  </div>
+
+  <div class="n-controls">
+    <div class="n-field">
+      <label for="nobel-year">AÑO</label>
+      <select id="nobel-year"></select>
+    </div>
+
+    <div class="n-field">
+      <label for="nobel-cat">CATEGORÍA</label>
+      <select id="nobel-cat">
+        <option value="phy">Física</option>
+        <option value="che">Química</option>
+        <option value="med">Fisiología o Medicina</option>
+        <option value="lit">Literatura</option>
+        <option value="pea">Paz</option>
+        <option value="eco">Ciencias Económicas</option>
+      </select>
+    </div>
+  </div>
+
+  <button id="nobel-go" type="button">Consultar premio</button>
+
+  <div class="n-result" id="nobel-result" aria-live="polite" aria-busy="false">
+    <div class="n-message">
+      Selecciona un año y una categoría para consultar los galardonados.
+    </div>
+  </div>
+
+  <div class="n-foot">
+    Fuente: Nobel Prize API · NobelPrize.org.
+    Las motivaciones originales se muestran en inglés.
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const root = document.getElementById("nobel-widget");
+  if (!root || root.dataset.initialized === "true") return;
+  root.dataset.initialized = "true";
+
+  const yearSel = root.querySelector("#nobel-year");
+  const catSel = root.querySelector("#nobel-cat");
+  const btn = root.querySelector("#nobel-go");
+  const out = root.querySelector("#nobel-result");
+
+  const currentYear = new Date().getFullYear();
+
+  for (let y = currentYear; y >= 1901; y--) {
+    const option = document.createElement("option");
+    option.value = y;
+    option.textContent = y;
+    yearSel.appendChild(option);
+  }
+
+  yearSel.value = currentYear - 1;
+
+  let controller = null;
+
+  function message(text, error) {
+    out.replaceChildren();
+
+    const div = document.createElement("div");
+    div.className = "n-message" + (error ? " n-error" : "");
+    div.textContent = text;
+
+    out.appendChild(div);
+  }
+
+  function loading() {
+    out.innerHTML =
+      '<div class="n-loading">' +
+      '<div class="n-spinner" aria-hidden="true"></div><br>' +
+      'Consultando los archivos del Premio Nobel…</div>';
+  }
+
+  function element(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text != null) el.textContent = text;
+    return el;
+  }
+
+  function render(data, year, category) {
+    const prizes = data.nobelPrizes || [];
+
+    out.replaceChildren();
+
+    if (!prizes.length) {
+      message(
+        "No hay información disponible para esta categoría y año. Es posible que el premio no se concediera.",
+        false
+      );
+      return;
+    }
+
+    const prize = prizes[0];
+    const laureates = prize.laureates || [];
+
+    const title = element("div", "n-result-title");
+    title.appendChild(element("strong", "", category));
+    title.appendChild(element("span", "", year));
+    out.appendChild(title);
+
+    if (!laureates.length) {
+      message(
+        "La API todavía no proporciona información sobre los galardonados de este premio.",
+        false
+      );
+      return;
+    }
+
+    laureates.forEach(function (laureate) {
+      const card = element("div", "n-laureate");
+
+      const name =
+        (laureate.knownName && laureate.knownName.en) ||
+        (laureate.orgName && laureate.orgName.en) ||
+        (laureate.fullName && laureate.fullName.en) ||
+        "Nombre no disponible";
+
+      card.appendChild(element("div", "n-name", name));
+
+      if (laureate.orgName) {
+        card.appendChild(element("div", "n-type", "Organización"));
+      } else {
+        card.appendChild(element("div", "n-type", "Galardonado"));
+      }
+
+      if (laureate.portion) {
+        card.appendChild(
+          element("div", "n-portion",
+            "Parte del premio: " + laureate.portion
+          )
+        );
+      }
+
+      const motivation =
+        laureate.motivation && laureate.motivation.en;
+
+      if (motivation) {
+        card.appendChild(element("p", "n-why", motivation));
+      }
+
+      out.appendChild(card);
+    });
+  }
+
+  async function consult() {
+    const year = yearSel.value;
+    const category = catSel.value;
+    const categoryName = catSel.options[catSel.selectedIndex].text;
+
+    if (category === "eco" && Number(year) < 1969) {
+      message(
+        "El Premio de Ciencias Económicas se concede desde 1969.",
+        false
+      );
+      return;
+    }
+
+    if (controller) controller.abort();
+
+    controller = new AbortController();
+    const activeController = controller;
+
+    const timeout = setTimeout(function () {
+      activeController.abort();
+    }, 12000);
+
+    btn.disabled = true;
+    btn.textContent = "Consultando…";
+    out.setAttribute("aria-busy", "true");
+
+    loading();
+
+    const endpoint =
+      "https://api.nobelprize.org/2.1/nobelPrizes" +
+      "?nobelPrizeYear=" + encodeURIComponent(year) +
+      "&nobelPrizeCategory=" + encodeURIComponent(category) +
+      "&limit=10";
+
+    try {
+      const response = await fetch(endpoint, {
+        signal: activeController.signal,
+        headers: { "Accept": "application/json" }
+      });
+
+      if (!response.ok) {
+        throw new Error("Error del servidor: " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (!data || !Array.isArray(data.nobelPrizes)) {
+        throw new Error("La respuesta de la API no tiene el formato esperado.");
+      }
+
+      if (controller === activeController) {
+        render(data, year, categoryName);
+      }
+
+    } catch (error) {
+      if (error.name === "AbortError") {
+        if (controller === activeController) {
+          message(
+            "La consulta ha tardado demasiado. Comprueba tu conexión e inténtalo de nuevo.",
+            true
+          );
+        }
+      } else {
+        message(
+          "No se ha podido conectar con NobelPrize.org. Comprueba tu conexión o inténtalo de nuevo más tarde.",
+          true
+        );
+      }
+
+    } finally {
+      clearTimeout(timeout);
+
+      if (controller === activeController) {
+        controller = null;
+        btn.disabled = false;
+        btn.textContent = "Consultar premio";
+        out.setAttribute("aria-busy", "false");
+      }
+    }
+  }
+
+  btn.addEventListener("click", consult);
+})();
+</script>
+
+</body>
+</html>
